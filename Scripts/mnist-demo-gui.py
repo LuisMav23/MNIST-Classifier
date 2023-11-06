@@ -12,7 +12,7 @@ def paint(event):
     x2, y2 = (event.x + 1), (event.y + 1)
     canvas.create_oval(x1, y1, x2, y2, fill="black", outline="black", width=25)
     
-def canvas_to_array():
+def canvas_to_array(flatten=True):
     # Capture the canvas content as an image
     canvas.update()
     x0 = canvas.winfo_rootx()
@@ -28,8 +28,10 @@ def canvas_to_array():
     img = 255 - img
     img = np.clip(img, 0, 255).astype(np.uint8)
     img = img / 225
-    img = img.reshape(1, -1)
-    
+    if flatten:
+        img = img.reshape(1, -1)
+    else:
+        img = img.reshape(1, 28, 28, 1)
     return img
     
 def predict(img):
@@ -38,7 +40,7 @@ def predict(img):
     prediction_label.config(text=f'The predicted number is {predicted_class[0]}')
 
 
-model = tf.keras.models.load_model('Models/MNIST-Classifier-Model.h5')
+model = tf.keras.models.load_model('Models/MNIST-cnn-model.h5')
 
 root = tk.Tk()
 root.title("Drawable Canvas")
@@ -47,7 +49,7 @@ root.resizable(False, False)
 frame = tk.Frame(root, width=200, height=100, bd=2, relief=tk.SUNKEN)
 frame.pack(side=tk.TOP)
 
-predict_button = tk.Button(frame, text="Predict", command=lambda: predict(canvas_to_array()))
+predict_button = tk.Button(frame, text="Predict", command=lambda: predict(canvas_to_array(flatten=False)))
 predict_button.pack(side=tk.LEFT)
 
 prediction_label = tk.Label(frame, text='No Predictions Yet')
@@ -59,6 +61,6 @@ canvas.pack(side=tk.TOP)
 clear_button = tk.Button(root, text="Clear Canvas", command=lambda: canvas.delete("all"))
 clear_button.pack(side=tk.BOTTOM)
 
-canvas.bind("<B1-Motion>", paint)
+canvas.bind("<B1-Motion>", paint) 
 
 root.mainloop()
